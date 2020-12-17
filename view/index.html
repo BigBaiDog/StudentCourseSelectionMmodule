@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="zh-cmn-Hans">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, shrink-to-fit=no" />
+  <meta name="renderer" content="webkit" />
+  <meta name="force-rendering" content="webkit" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <title>学生选课系统</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css"
+    integrity="sha384-cLRrMq39HOZdvE0j6yBojO4+1PrHfB7a9l5qLcmRm/fiWXYY+CndJPmyu5FV/9Tw" crossorigin="anonymous" />
+</head>
+<body class="mdui-theme-primary-indigo mdui-theme-accent-pink">
+  <div class="mdui-appbar mdui-hoverable">
+    <div class="mdui-toolbar mdui-color-theme">
+      <a href="javascript:;">
+        <i class="mdui-icon material-icons">local_library</i>
+      </a>
+      <a href="javascript:;" class="mdui-typo-headline">学生选课系统</a>
+      <div class="mdui-toolbar-spacer"></div>
+      <a href="javascript:;" class="mdui-typo-title">{$name}</a>
+      <a href="/students/logout" class="mdui-btn mdui-btn-icon" mdui-tooltip="{content: '退出'}">
+        <i class="mdui-icon material-icons">close</i>
+      </a>
+    </div>
+  </div>
+  <div class="mdui-container mdui-m-t-5">
+    <div class="mdui-table-fluid mdui-hoverable">
+      <table class="mdui-table mdui-table-hoverable">
+        <thead>
+          <tr>
+            <th>课程编号</th>
+            <th>课程名称</th>
+            <th>上课老师</th>
+            <th>学分</th>
+            <th>选课情况</th>
+          </tr>
+        </thead>
+        <tbody>
+          {volist name='allCourses' id='class'}
+          {if $class.STUNO == $stuno || $class.STUNO == ''}
+          <tr>
+            <td>{$class.CID}</td>
+            <td>{$class.CNAME}</td>
+            <td>{$class.TNAME}</td>
+            <td>{$class.CREDIT}</td>
+            <td>
+              {if $class.STUNO == $stuno}
+              <label class="mdui-checkbox">
+                <input type="checkbox" class="{$class.CID}" value="{$class.CID}" checked>
+                <i class="mdui-checkbox-icon"></i>
+                已选
+              </label>
+              {else/}
+              <label class="mdui-checkbox">
+                <input type="checkbox" class="{$class.CID}" value="{$class.CID}">
+                <i class="mdui-checkbox-icon"></i>
+                未选
+              </label>
+              {/if}
+            </td>
+          </tr>
+          {/if}
+          {/volist}
+        </tbody>
+      </table>
+      {$allCourses|raw}
+    </div>
+    <div class="mdui-card mdui-m-a-5 mdui-hoverable">
+      <div class="mdui-card-primary">
+        <div class="mdui-card-primary-title">{$name} 已选修的课程</div>
+        <div class="mdui-progress">
+          <div class="mdui-progress-determinate"></div>
+        </div>
+      </div>
+      <div class="mdui-card-content">
+        {foreach $courses as $course}
+        <div class="mdui-chip mdui-m-a-1">
+          <span class="mdui-chip-icon">{$course.CREDIT}</span>
+          <span class="mdui-chip-title">{$course.CNAME}</span>
+          <span class="mdui-chip-delete" value="{$course.EID}"><i class="mdui-icon material-icons">cancel</i></span>
+        </div>
+        {/foreach}
+      </div>
+    </div>
+  </div>
+  <div class="mdui-color-theme mdui-text-center mdui-p-a-1">
+    <p>Oracle信息数据分析 - 期末题</p>
+    <p>17级信息管理与信息系统本科3班</p>
+    <p>冯宏远 | 2017134329</p>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/js/mdui.min.js"
+    integrity="sha384-gCMZcshYKOGRX9r6wbDrvF+TcCCswSHFucUzUPwka+Gr+uHgjlYvkABr95TCOz3A"
+    crossorigin="anonymous"></script>
+  <script type="text/javascript">
+    var $ = mdui.$;
+    $('.pager').addClass('mdui-float-right mdui-m-r-2');
+    $('.pager').children().addClass('mdui-btn-group');
+    $('.pager li').first().children().text('上一页');
+    $('.pager li').first().children().addClass('mdui-btn mdui-color-theme-accent');
+    $('.pager li').last().children().text('下一页');
+    $('.pager li').last().children().addClass('mdui-btn mdui-color-theme-accent');
+    var width = parseInt({$credit} / 19 * 100) + '%'
+    $('.mdui-progress-determinate').css('width', width)
+    $('input').on('click', function (e) {
+      $.ajax({
+        method: 'POST',
+        url: '/courses/selectCourses',
+        data: {
+          cid: $(this).attr('value'),
+          stuno: {$stuno},
+        },
+        success: function (data) {
+          if (data == 'err') {
+            mdui.alert('在一个学期中，选课的学分不能超过19学分', function () {
+              location.reload();
+              $('{$class.CID}').removeAttr('checked');
+            });
+          } else {
+            location.reload();
+          }
+        }
+      })
+    });
+    $('.mdui-chip-delete').on('click', function (e) {
+      console.log($(this).attr('value'))
+      $.ajax({
+        method: 'POST',
+        url: '/courses/cancel',
+        data: {
+          eid: $(this).attr('value'),
+        },
+        success: function (data) {
+          if(data==1){
+            location.reload();
+          }
+        }
+      })
+    })
+  </script>
+</body>
+</html>
